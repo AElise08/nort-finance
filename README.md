@@ -1,86 +1,306 @@
 # Nort Finance WhatsApp Bot
 
-Nort Finance is a WhatsApp bot for personal finance workflows. It connects WhatsApp Web, Supabase, Mistral, and Groq to help users record transactions, track balances, manage recurring expenses, create goals, handle installments, schedule reminders, transcribe audio, inspect receipt/product images, and ask whether a purchase fits their current financial context.
+Bot de WhatsApp para finanças pessoais. Ele conversa com a pessoa pelo WhatsApp, registra gastos e receitas, mostra saldo, agenda lembretes, controla despesas fixas, metas e compras parceladas, transcreve áudio, lê imagens de comprovantes/produtos e usa IA para responder se uma compra cabe no orçamento.
 
-## Features
+Este projeto foi pensado para rodar em uma VPS ou servidor. Ele usa WhatsApp Web por QR Code, Supabase como banco/autenticação, Mistral para interpretar textos financeiros e Groq para áudio/imagem.
 
-- WhatsApp onboarding with Supabase Auth account linking.
-- Natural-language income and expense capture in Brazilian Portuguese.
-- Audio transcription with Groq Whisper.
-- Receipt and product image analysis with a multimodal Groq model.
-- Purchase decision assistant powered by Mistral and finance context.
-- Balance summary, pending transactions, recurring expenses, installments, goals, and reminders.
-- PM2 ecosystem file for production process management.
+## O que o bot faz
 
-## Tech Stack
+- Cria ou vincula uma conta pelo WhatsApp.
+- Registra frases como "gastei 45 no mercado" ou "recebi 800 de freela".
+- Mostra saldo do mês, pendências, fixas, metas e parceladas.
+- Agenda lembretes como "me lembra amanhã às 9h de pagar o aluguel".
+- Transcreve áudio enviado no WhatsApp.
+- Analisa foto de comprovante ou produto.
+- Responde perguntas como "posso comprar isso por R$ 600?" usando o contexto financeiro da pessoa.
 
-- Node.js, CommonJS
-- whatsapp-web.js
-- Supabase Auth and database
-- Mistral API
-- Groq API
-- node-cron
-- PM2 for deployment
+## Antes de começar
 
-## Security Notice
+Você vai precisar criar contas/serviços em quatro lugares:
 
-This project needs server-side secrets to run. Never commit real values for SUPABASE_URL, ANON_KEY, SERVICE_KEY, MISTRAL_KEY, or GROQ_KEY. Use .env.example as a template and keep your real .env file private.
+1. Uma VPS ou servidor Linux, por exemplo Ubuntu.
+2. Um projeto no Supabase.
+3. Uma chave da Mistral.
+4. Uma chave da Groq.
 
-The Supabase service role key is highly privileged. Run this bot only in a trusted server environment, keep Row Level Security policies enabled for client-facing apps, and rotate any key that was ever exposed in a public repository, chat, log, or shared terminal output.
+Também precisa de um número de WhatsApp que será usado pelo bot. Na primeira execução, o terminal mostra um QR Code. Você escaneia esse QR Code com o WhatsApp, como no WhatsApp Web.
 
-The directories .wwebjs_auth/ and .wwebjs_cache/ contain WhatsApp session data and must never be published.
+## Aviso de segurança
 
-## Requirements
+Nunca publique o arquivo `.env`. Ele guarda chaves privadas.
 
-- Node.js 20 or newer recommended.
-- Chromium installed on the server at /usr/bin/chromium-browser, or update the Puppeteer executable path in index.js.
-- A Supabase project with these tables: profiles, categories, transactions, reminders, recurring_rules, goals, goal_contributions, installment_plans, and installments.
-- API keys for Mistral and Groq.
+Nunca publique estas pastas:
 
-## Setup
+- `.wwebjs_auth/`
+- `.wwebjs_cache/`
+- `logs/`
+- `node_modules/`
 
-1. Install dependencies:
+A chave `SERVICE_KEY` do Supabase é muito poderosa. Quem tiver essa chave pode acessar dados do projeto. Use somente em servidor confiável e troque a chave imediatamente se ela aparecer em GitHub, print, chat, log ou terminal compartilhado.
 
-   npm install
+## 1. Preparar a VPS
 
-2. Create your environment file:
+Entre na sua VPS por SSH:
 
-   cp .env.example .env
+```bash
+ssh root@SEU_IP_DA_VPS
+```
 
-3. Fill .env with your own credentials.
+Atualize o servidor:
 
-4. Check syntax:
+```bash
+apt update && apt upgrade -y
+```
 
-   npm run check:syntax
+Instale Node.js, Git, Chromium e PM2:
 
-5. Start locally or on your server:
+```bash
+apt install -y git curl chromium-browser
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt install -y nodejs
+npm install -g pm2
+```
 
-   npm start
+Confira se instalou:
 
-6. For PM2:
+```bash
+node -v
+npm -v
+pm2 -v
+```
 
-   npm run pm2:start
+## 2. Baixar o projeto
 
-On the first run, scan the WhatsApp QR code printed in the terminal.
+Clone este repositório na VPS:
 
-## Environment Variables
+```bash
+git clone https://github.com/AElise08/nort-finance.git
+cd nort-finance
+```
 
-| Variable | Purpose |
+Instale as dependências:
+
+```bash
+npm install
+```
+
+## 3. Criar o projeto no Supabase
+
+1. Acesse https://supabase.com.
+2. Crie um projeto novo.
+3. Vá em Project Settings > API.
+4. Copie estes valores:
+   - Project URL
+   - anon public key
+   - service_role key
+
+Esses valores serão usados no arquivo `.env`.
+
+### Tabelas esperadas
+
+O código espera que seu Supabase tenha estas tabelas:
+
+- `profiles`
+- `categories`
+- `transactions`
+- `reminders`
+- `recurring_rules`
+- `goals`
+- `goal_contributions`
+- `installment_plans`
+- `installments`
+
+Este repositório ainda não inclui um arquivo SQL pronto com o schema. Antes de rodar em produção, você precisa criar essas tabelas no Supabase com as colunas usadas pelo código. Procure no arquivo `index.js` pelos nomes das tabelas para ver os campos usados em cada uma.
+
+## 4. Criar as chaves de IA
+
+### Mistral
+
+1. Acesse https://console.mistral.ai.
+2. Crie uma API key.
+3. Guarde o valor para `MISTRAL_KEY`.
+
+### Groq
+
+1. Acesse https://console.groq.com.
+2. Crie uma API key.
+3. Guarde o valor para `GROQ_KEY`.
+
+## 5. Configurar o arquivo .env
+
+Crie o arquivo `.env` a partir do exemplo:
+
+```bash
+cp .env.example .env
+nano .env
+```
+
+Preencha assim, usando os seus próprios valores:
+
+```env
+SUPABASE_URL=https://seu-projeto.supabase.co
+ANON_KEY=sua_anon_key_do_supabase
+SERVICE_KEY=sua_service_role_key_do_supabase
+MISTRAL_KEY=sua_chave_da_mistral
+GROQ_KEY=sua_chave_da_groq
+```
+
+Salve no nano com `CTRL + O`, aperte Enter, e saia com `CTRL + X`.
+
+Confirme que o arquivo `.env` não será enviado para o GitHub:
+
+```bash
+git check-ignore -v .env
+```
+
+Se aparecer uma linha citando `.gitignore`, está certo.
+
+## 6. Testar antes de ligar o bot
+
+Confira se o JavaScript está válido:
+
+```bash
+npm run check:syntax
+```
+
+Se não aparecer erro, rode o bot:
+
+```bash
+npm start
+```
+
+Na primeira execução, vai aparecer um QR Code no terminal. Abra o WhatsApp no celular e vá em:
+
+Aparelhos conectados > Conectar aparelho
+
+Escaneie o QR Code. Quando conectar, o terminal deve mostrar que o Nort Finance está online.
+
+Para parar o bot no terminal, use `CTRL + C`.
+
+## 7. Rodar em produção com PM2
+
+Depois que o teste funcionar, rode com PM2:
+
+```bash
+npm run pm2:start
+```
+
+Ver status:
+
+```bash
+pm2 status
+```
+
+Ver logs:
+
+```bash
+pm2 logs nort-finance
+```
+
+Reiniciar:
+
+```bash
+pm2 restart nort-finance
+```
+
+Parar:
+
+```bash
+pm2 stop nort-finance
+```
+
+Fazer o bot voltar sozinho se a VPS reiniciar:
+
+```bash
+pm2 save
+pm2 startup
+```
+
+O comando `pm2 startup` vai imprimir outro comando grande. Copie e execute esse comando também.
+
+## Como usar no WhatsApp
+
+Depois de conectado, mande uma mensagem para o número do bot. Ele vai perguntar se você já tem conta ou se quer criar.
+
+Exemplos de mensagens:
+
+```text
+gastei 45 no mercado
+recebi 800 de freela
+uber 18 ontem
+me lembra amanhã às 9h de pagar aluguel
+quero juntar R$ 2000 para viagem
+contribui 100 pra meta viagem
+posso comprar um celular por R$ 1800?
+```
+
+Você também pode enviar áudio ou foto de comprovante/produto.
+
+## Variáveis de ambiente
+
+| Variável | Para que serve |
 | --- | --- |
-| SUPABASE_URL | Supabase project URL. |
-| ANON_KEY | Supabase anon key for password sign-in. |
-| SERVICE_KEY | Supabase service role key for privileged server actions. |
-| MISTRAL_KEY | Mistral API key for financial parsing and advice. |
-| GROQ_KEY | Groq API key for transcription and image analysis. |
+| `SUPABASE_URL` | URL do seu projeto Supabase. |
+| `ANON_KEY` | Chave pública anon do Supabase, usada no login. |
+| `SERVICE_KEY` | Chave service role do Supabase, usada pelo servidor para ações privilegiadas. |
+| `MISTRAL_KEY` | Chave da Mistral para interpretar textos e gerar respostas financeiras. |
+| `GROQ_KEY` | Chave da Groq para transcrever áudio e analisar imagem. |
 
-## Production Notes
+## Problemas comuns
 
-- Use a process manager such as PM2.
-- Protect the server and restrict SSH access.
-- Keep .env, logs, WhatsApp auth/cache folders, and backups outside Git.
-- Rotate provider keys regularly and immediately after accidental exposure.
-- Review Supabase permissions carefully before accepting untrusted users.
+### O QR Code não aparece
 
-## License
+Confira se as dependências foram instaladas:
+
+```bash
+npm install
+```
+
+Confira se o Chromium existe no caminho usado pelo projeto:
+
+```bash
+which chromium-browser
+```
+
+Se o comando não encontrar nada, instale o Chromium ou ajuste `executablePath` no arquivo `index.js`.
+
+### O bot diz que faltam variáveis de ambiente
+
+Abra o `.env` e confira se todos os campos foram preenchidos:
+
+```bash
+nano .env
+```
+
+### O bot conecta mas não salva dados
+
+Verifique se as tabelas existem no Supabase e se a `SERVICE_KEY` está correta.
+
+### O bot parou depois de um tempo
+
+Veja os logs:
+
+```bash
+pm2 logs nort-finance
+```
+
+Reinicie:
+
+```bash
+pm2 restart nort-finance
+```
+
+## Checklist antes de publicar mudanças
+
+Antes de dar commit ou push, rode:
+
+```bash
+git status --ignored
+npm run check:syntax
+```
+
+Confirme que `.env`, `.wwebjs_auth/`, `.wwebjs_cache/`, `logs/` e `node_modules/` aparecem como ignorados.
+
+## Licença
 
 MIT
