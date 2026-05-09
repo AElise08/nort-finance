@@ -1,0 +1,30 @@
+{
+  "name": "nort-finance-whatsapp-bot",
+  "version": "1.0.0",
+  "description": "WhatsApp bot for personal finance tracking, reminders, goals, installments, and AI-assisted purchase decisions.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "check:syntax": "node --check index.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "finance",
+    "bot",
+    "supabase",
+    "mistral",
+    "groq",
+    "personal-finance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "@mistralai/mistralai": "^2.2.1",
+    "@supabase/supabase-js": "^2.105.3",
+    "dotenv": "^17.4.2",
+    "groq-sdk": "^1.1.2",
+    "node-cron": "^4.2.1"
+  }
+}

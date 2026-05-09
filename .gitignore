@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# WhatsApp Web local sessions/cache
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Logs and process files
+logs/
+*.log
+*.pid
+.pm2/
+
+# OS/editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Runtime/build artifacts
+dist/
+build/
+coverage/
